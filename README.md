@@ -4,6 +4,9 @@ This Repository is for study Vue.js + Ruby on Rails<br>
 Referenced by<br>
 https://bit.ly/2R71Dg4
 
+- Frontend Vue.js
+- Backend Ruby on Rails
+
 ## 環境
 - Ruby 2.6.5
 - Ruby on Rails 5.2.3
@@ -129,4 +132,104 @@ root to: 'homes#index'
 <div data-v-6fb8108a="" id="app">
   <p data-v-6fb8108a="">Hello Vue!</p>
 </div>
+```
+
+## フロントエンドとバックエンドを連携
+
+### axios をインストール
+
+```
+$ yarn add axios
+```
+
+### app.vue ファイルを書き換えJSONを出力
+
+```
+# app/javascript/app.vue
+
+<template>
+  <div id="app">
+    <table>
+      <tbody>
+        <tr>
+          <th>ID</th>
+          <th>name</th>
+          <th>birth</th>
+          <th>department</th>
+          <th>gender</th>
+          <th>joined_date</th>
+          <th>payment</th>
+          <th>note</th>
+        </tr>
+        <tr v-for="e in employees" :key="e.id">
+          <td>{{ e.id }}</td>
+          <td>{{ e.name }}</td>
+          <td>{{ e.birth }}</td>
+          <td>{{ e.department }}</td>
+          <td>{{ e.gender }}</td>
+          <td>{{ e.joined_date }}</td>
+          <td>{{ e.payment }}</td>
+          <td>{{ e.note }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  data: function () {
+    return {
+      employees: []
+    }
+  },
+  mounted () {
+    axios
+      .get('/api/v1/employees.json')
+      .then(response => (this.employees = response.data))
+  }
+}
+</script>
+
+<style scoped>
+p {
+  font-size: 2em;
+  text-align: center;
+}
+</style>
+```
+
+## アプリケーションをカスタマイズ
+
+```
+# app/javascript/app.vue
+
+<template>
+  <div id="app">
+    <table>
+      <tbody>
+        <tr>
+          <th>ID</th>
+          <th>name</th>
+          <th>department</th>
+          <th>gender</th>
+        </tr>
+        <tr v-for="e in employees" :key="e.id">
+          <td>{{ e.id }}</td>
+          <td>{{ e.name }}</td>
+          <td>{{ e.department }}</td>
+          <td>{{ e.gender }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</template>
+
+# app/controllers/api/v1/employees_controller.rb
+def index
+  employees = Employee.select(:id, :name, :department, :gender)
+  render json: employees
+end
 ```
