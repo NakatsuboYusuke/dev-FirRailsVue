@@ -107,3 +107,26 @@ end
 http://localhost:3000/api/v1/employees/
 http://localhost:3000/api/v1/employees/1
 ```
+
+## homes コントローラを作成
+
+```
+$ rails g controller homes index
+
+# config/routes.rb
+resources :homes, only: [:index]
+root to: 'homes#index'
+```
+
+## Vue.js のタグを記述。"Hello, Vue!"を表示
+
+```
+# app/views/homes/index.html.erb
+<%= javascript_pack_tag 'hello_vue' %>
+<%= stylesheet_pack_tag 'hello_vue' %>
+
+# =>
+<div data-v-6fb8108a="" id="app">
+  <p data-v-6fb8108a="">Hello Vue!</p>
+</div>
+```
