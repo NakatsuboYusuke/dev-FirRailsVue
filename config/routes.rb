@@ -6,4 +6,6 @@ Rails.application.routes.draw do
       resources :employees, only: [:index, :show]
     end
   end
+  resources :homes, only: [:index]
+  root to: 'homes#index'
 end
