@@ -1,5 +1,5 @@
 # README
-This Repository is for study Vue.js + Ruby on Rails<br>
+This Repository is for First Study Vue.js + Ruby on Rails<br>
 <br>
 Referenced by<br>
 https://bit.ly/2R71Dg4
@@ -868,3 +868,35 @@ class Api::V1::EmployeesController < ApiController
 :<snip>
 end
 ```
+
+## 削除機能を作成
+
+### ルーティングにdestroyアクションを追加
+
+```
+# config/routes.rb
+:<snip>
+namespace :api, { format: 'json' } do
+  namespace :v1 do
+    resources :employees, only: [:index, :show, :create, :update, :destroy]
+  end
+end
+:<snip>
+```
+
+### コントローラにdestroyアクションを追加
+
+```
+# app/controllers/api/v1/employees_controller.rb
+class Api::V1::EmployeesController < ApiController
+  before_action :set_employee, only: [:show, :update, :destroy]
+
+:<snip>
+  def destroy
+    @employee.destroy!
+    head :no_content
+  end
+:<snip>
+end
+```
+

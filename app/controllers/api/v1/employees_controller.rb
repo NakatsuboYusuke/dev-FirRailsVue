@@ -31,6 +31,12 @@ class Api::V1::EmployeesController < ApiController
     end
   end
 
+  def destroy
+    @employee.destroy!
+    # 削除に失敗した場合、例外処理を発生させ、rescue_from Exception で拾う。
+    head :no_content
+  end
+
   private
 
   def set_employee
