@@ -161,15 +161,15 @@ $ yarn add axios
           <th>payment</th>
           <th>note</th>
         </tr>
-        <tr v-for="e in employees" :key="e.id">
-          <td>{{ e.id }}</td>
-          <td>{{ e.name }}</td>
-          <td>{{ e.birth }}</td>
-          <td>{{ e.department }}</td>
-          <td>{{ e.gender }}</td>
-          <td>{{ e.joined_date }}</td>
-          <td>{{ e.payment }}</td>
-          <td>{{ e.note }}</td>
+        <tr v-for="list in employees" :key="list.id">
+          <td>{{ list.id }}</td>
+          <td>{{ list.name }}</td>
+          <td>{{ list.birth }}</td>
+          <td>{{ list.department }}</td>
+          <td>{{ list.gender }}</td>
+          <td>{{ list.joined_date }}</td>
+          <td>{{ list.payment }}</td>
+          <td>{{ list.note }}</td>
         </tr>
       </tbody>
     </table>
@@ -182,13 +182,13 @@ import axios from 'axios';
 export default {
   data: function () {
     return {
-      employees: []
+      list: []
     }
   },
   mounted () {
     axios
       .get('/api/v1/employees.json')
-      .then(response => (this.employees = response.data))
+      .then(response => (this.list = response.data))
   }
 }
 </script>
@@ -216,20 +216,216 @@ p {
           <th>department</th>
           <th>gender</th>
         </tr>
-        <tr v-for="e in employees" :key="e.id">
-          <td>{{ e.id }}</td>
-          <td>{{ e.name }}</td>
-          <td>{{ e.department }}</td>
-          <td>{{ e.gender }}</td>
+        <tr v-for="item in list" :key="item.id">
+          <td>{{ item.id }}</td>
+          <td>{{ item.name }}</td>
+          <td>{{ item.department }}</td>
+          <td>{{ item.gender }}</td>
         </tr>
       </tbody>
     </table>
   </div>
 </template>
 
-# app/controllers/api/v1/employees_controller.rb
+# app/javascript/EmployeeIndexPage.vue
 def index
   employees = Employee.select(:id, :name, :department, :gender)
   render json: employees
 end
+```
+
+## 一覧画面から詳細画面へ遷移
+
+### vue-router をインストール
+
+```
+$ yarn add vue-router
+```
+
+### EmployeeIndexPage.vue を作成し、app.vue の内容をコピー
+
+```
+# app/javascript/EmployeeIndexPage.vue
+<template>
+  <div id="app">
+    <table>
+      <tbody>
+        <tr>
+          <th>ID</th>
+          <th>name</th>
+          <th>department</th>
+          <th>gender</th>
+        </tr>
+        <tr v-for="item in list" :key="item.id">
+          <td>{{ item.id }}</td>
+          <td>{{ item.name }}</td>
+          <td>{{ item.department }}</td>
+          <td>{{ item.gender }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  data: function () {
+    return {
+      list: []
+    }
+  },
+  mounted () {
+    axios
+      .get('/api/v1/employees.json')
+      .then(response => (this.list = response.data))
+  }
+}
+</script>
+
+<style scoped>
+p {
+  font-size: 2em;
+  text-align: center;
+}
+</style>
+```
+
+### EmployeeIndexPage.vue を作成
+
+```
+# app/javascript/EmployeeDetailPage.vue
+<template>
+  <dl>
+    <dt>ID</dt>
+    <dd>{{ employee.id }}</dd>
+    <dt>Name</dt>
+    <dd>{{ employee.name }}</dd>
+    <dt>Department</dt>
+    <dd>{{ employee.department }}</dd>
+    <dt>Gender</dt>
+    <dd>{{ employee.gender }}</dd>
+    <dt>Birth</dt>
+    <dd>{{ employee.birth }}</dd>
+    <dt>Joined Date</dt>
+    <dd>{{ employee.joined_date }}</dd>
+    <dt>Payment</dt>
+    <dd>{{ employee.payment }}</dd>
+    <dt>Note</dt>
+    <dd>{{ employee.note }}</dd>
+  </dl>
+</template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  data: function () {
+    return {
+      employee: {}
+    }
+  },
+  mounted () {
+    axios
+      .get(`/api/v1/employees/${this.$route.params.id}.json`)
+      .then(response => (this.employee = response.data))
+  }
+}
+</script>
+
+<style scoped>
+</style>
+```
+
+### app.vue にルーティングを記述
+
+```
+# app/javascript/app.vue
+<template>
+  <div>
+    <router-view></router-view>
+  </div>
+</template>
+
+<script>
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+
+import EmployeeIndexPage from 'EmployeeIndexPage.vue'
+import EmployeeDetailPage from 'EmployeeDetailPage.vue'
+
+// Vue componentに VueRouterのインスタンスを引数とするコンポーネントを作成
+// ルーティングを設定
+const router = new VueRouter({
+  routes: [
+    {
+      path: '/',
+      component: EmployeeIndexPage
+    },
+    // :id は数値のみに制限する
+    {
+      path: '/employees/:id(\\d+)',
+      component: EmployeeDetailPage
+    }
+  ]
+})
+
+// CommonJS 環境では Vue.useを使って VueRouterを指定する
+// ref. https://jp.vuejs.org/v2/guide/plugins.html#%E3%83%97%E3%83%A9%E3%82%B0%E3%82%A4%E3%83%B3%E3%81%AE%E4%BD%BF%E7%94%A8
+Vue.use(VueRouter)
+
+export default {
+  router
+}
+</script>
+
+<style scoped>
+</style>
+```
+
+### ルーティングの確認
+以下のアドレスで、レスポンスが返ってきているか確認する
+
+```
+http://localhost:3000/#/
+http://localhost:3000/#/employees/1
+```
+
+### リンクを追加
+
+```
+# app/javascript/app.vue
+:<snip>
+{
+  path: '/employees/:id(\\d+)',
+  name: 'EmployeeDetailPage',
+  component: EmployeeDetailPage
+}
+:<snip>
+
+# app/javascript/EmployeeIndexPage.vue
+<template>
+  <div id="app">
+    <table>
+      <tbody>
+        <tr>
+          <th>ID</th>
+          <th>name</th>
+          <th>department</th>
+          <th>gender</th>
+        </tr>
+        <tr v-for="item in list" :key="item.id">
+          <td>
+            <router-link :to="{ name: 'EmployeeDetailPage', params: { id: item.id } }">{{ item.id }}</router-link>
+          </td>
+          <td>{{ item.name }}</td>
+          <td>{{ item.department }}</td>
+          <td>{{ item.gender }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</template>
+:<snip>
 ```
