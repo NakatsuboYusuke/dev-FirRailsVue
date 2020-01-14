@@ -11,6 +11,7 @@ import VueRouter from 'vue-router'
 import EmployeeIndexPage from 'EmployeeIndexPage.vue'
 import EmployeeDetailPage from 'EmployeeDetailPage.vue'
 import EmployeeNewPage from 'EmployeeNewPage.vue'
+import EmployeeEditPage from 'EmployeeEditPage.vue'
 
 // Vue componentに VueRouterのインスタンスを引数とするコンポーネントを作成
 // ルーティング設定
@@ -30,6 +31,11 @@ const router = new VueRouter({
       path: '/employees/new',
       name: 'EmployeeNewPage',
       component: EmployeeNewPage
+    },
+    {
+      path: '/employees/:id(\\d+)/edit',
+      name: 'EmployeeEditPage',
+      component: EmployeeEditPage
     }
   ]
 })

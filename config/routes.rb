@@ -3,7 +3,7 @@ Rails.application.routes.draw do
   # namespeceでパスを指定
   namespace :api, { format: 'json' } do
     namespace :v1 do
-      resources :employees, only: [:index, :show, :create]
+      resources :employees, only: [:index, :show, :create, :update]
     end
   end
   resources :homes, only: [:index]

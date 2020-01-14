@@ -622,3 +622,249 @@ class Api::V1::EmployeesController < ApiController
   end
 end
 ```
+
+## 編集ページを作成
+
+### フォーム部分をコンポーネント化する
+
+- v-on:submit.prevent="$emit('submit')" で submitイベントを発行し、<employee-form-pane v-on:submit="createEmployee"></employee-form-pane> で submitイベントを受け取り
+createEmployee メソッドを実行する。
+
+- props では親コンポーネントから受け取れる値を設定する。
+
+```
+# app/javascript/EmployeeFormPane.vue
+<template>
+  <form v-on:submit.prevent="$emit('submit')">
+    <div v-if="errors.length != 0">
+      <ul v-for="item in errors" :key="item">
+        <li><font color="red">{{ item }}</font></li>
+      </ul>
+    </div>
+    <div>
+      <label>Name</label>
+      <input v-model="employee.name" type="text">
+    </div>
+    <div>
+      <label>Department</label>
+      <input v-model="employee.department" type="text">
+    </div>
+    <div>
+      <label>Gender</label>
+      <select v-model="employee.gender">
+        <option>other</option>
+        <option>male</option>
+        <option>female</option>
+      </select>
+    </div>
+    <div>
+      <label>Birth</label>
+      <input v-model="employee.birth" type="date">
+    </div>
+    <div>
+      <label>Joined Date</label>
+      <input v-model="employee.joined_date" type="date">
+    </div>
+    <div>
+      <label>Payment</label>
+      <input v-model="employee.payment" type="number" min="0">
+    </div>
+    <div>
+      <label>Note</label>
+      <input v-model="employee.note" type="text">
+    </div>
+    <button type="submit">Commit</button>
+  </form>
+</template>
+
+<script>
+export default {
+  props: {
+    employee: {},
+    errors: ''
+  }
+}
+</script>
+
+<style>
+</style>
+```
+
+```
+# app/javascript/EmployeeNewPage.vue
+<template>
+  <employee-form-pane :errors="errors" :employee="employee" v-on:submit="createEmployee"></employee-form-pane>
+</template>
+
+<script>
+import axios from 'axios';
+import EmployeeFormPane from 'EmployeeFormPane.vue';
+
+export default {
+  components: {
+    EmployeeFormPane
+  },
+  data() {
+    return {
+      employee: {
+        name: '',
+        department: '',
+        gender: '',
+        birth: '',
+        joined_date: '',
+        payment: '',
+        note: ''
+      },
+      errors: ''
+    }
+  },
+  methods: {
+    createEmployee: function() {
+      axios
+        .post('/api/v1/employees', this.employee)
+        .then(response => {
+          let event = response.data;
+          this.$router.push({ name: 'EmployeeDetailPage', params: { id: event.id } });
+        })
+        .catch(error => {
+          console.error(error);
+          if (error.response.data && error.response.data.errors) {
+            this.errors = error.response.data.errors;
+          }
+        });
+    }
+  }
+}
+</script>
+
+<style scoped>
+</style>
+```
+
+### 編集画面を作成
+
+```
+# EmployeeEditPage.vue
+<template>
+  <employee-form-pane :errors="errors" :employee="employee" @submit="updateEmployee"></employee-form-pane>
+</template>
+
+<script>
+import axios from 'axios';
+import EmployeeFormPane from 'EmployeeFormPane.vue';
+
+export default {
+  components: {
+    EmployeeFormPane
+  },
+  data() {
+    return {
+      employee: {},
+      errors: ''
+    }
+  },
+  mounted() {
+    axios
+      .get(`/api/v1/employees/${this.$route.params.id}.json`)
+      .then(response => (this.employee = response.data))
+  },
+  methods: {
+    updateEmployee: function() {
+      axios
+        .patch(`/api/v1/employees/${this.employee.id}`, this.employee)
+        .then(response => {
+          this.$router.push({ name: 'EmployeeDetailPage', params: { id: this.employee.id } });
+        })
+        .catch(error => {
+          console.error(error);
+          if (error.response.data && error.response.data.errors) {
+            this.errors = error.response.data.errors;
+          }
+        });
+    }
+  }
+}
+</script>
+
+<style scoped>
+</style>
+```
+
+### ルーティングを作成
+
+```
+#
+:<snip>
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+
+import EmployeeIndexPage from 'EmployeeIndexPage.vue'
+import EmployeeDetailPage from 'EmployeeDetailPage.vue'
+import EmployeeNewPage from 'EmployeeNewPage.vue'
+import EmployeeEditPage from 'EmployeeEditPage.vue'
+
+const router = new VueRouter({
+  routes: [
+    {
+      path: '/',
+      component: EmployeeIndexPage
+    },
+    // :id は数値のみに制限する
+    {
+      path: '/employees/:id(\\d+)',
+      name: 'EmployeeDetailPage',
+      component: EmployeeDetailPage
+    },
+    {
+      path: '/employees/new',
+      name: 'EmployeeNewPage',
+      component: EmployeeNewPage
+    },
+    {
+      path: '/employees/:id(\\d+)/edit',
+      name: 'EmployeeEditPage',
+      component: EmployeeEditPage
+    }
+  ]
+})
+:<:snip>
+```
+
+### ルーティングの確認
+以下のアドレスで、レスポンスが返ってきているか確認する
+
+```
+http://localhost:3000/#/employees/1/edit
+```
+
+### ルーティングにupdateアクションを追加
+
+```
+# config/routes.rb
+:<snip>
+namespace :api, { format: 'json' } do
+  namespace :v1 do
+    resources :employees, only: [:index, :show, :create, :update]
+  end
+end
+:<snip>
+```
+
+### コントローラにupdateアクションを追加
+
+```
+# app/controllers/api/v1/employees_controller.rb
+class Api::V1::EmployeesController < ApiController
+  before_action :set_employee, only: [:show, :update]
+
+:<snip>
+  def update
+    if @employee.update_attributes(employee_params)
+    head :no_content
+    else
+      render json: { errors: @employee.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+:<snip>
+end
+```
