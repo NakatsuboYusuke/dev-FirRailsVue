@@ -12,15 +12,15 @@
           <th>payment</th>
           <th>note</th>
         </tr>
-        <tr v-for="e in employees" :key="e.id">
-          <td>{{ e.id }}</td>
-          <td>{{ e.name }}</td>
-          <td>{{ e.birth }}</td>
-          <td>{{ e.department }}</td>
-          <td>{{ e.gender }}</td>
-          <td>{{ e.joined_date }}</td>
-          <td>{{ e.payment }}</td>
-          <td>{{ e.note }}</td>
+        <tr v-for="item in list" :key="item.id">
+          <td>{{ item.id }}</td>
+          <td>{{ item.name }}</td>
+          <td>{{ item.birth }}</td>
+          <td>{{ item.department }}</td>
+          <td>{{ item.gender }}</td>
+          <td>{{ item.joined_date }}</td>
+          <td>{{ item.payment }}</td>
+          <td>{{ item.note }}</td>
         </tr>
       </tbody>
     </table>
@@ -33,13 +33,13 @@ import axios from 'axios';
 export default {
   data: function () {
     return {
-      employees: []
+      list: []
     }
   },
   mounted () {
     axios
       .get('/api/v1/employees.json')
-      .then(response => (this.employees = response.data))
+      .then(response => (this.list = response.data))
   }
 }
 </script>
