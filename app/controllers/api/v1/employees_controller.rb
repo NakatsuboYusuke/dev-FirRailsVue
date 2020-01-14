@@ -1,5 +1,5 @@
 class Api::V1::EmployeesController < ApiController
-  before_action :set_employee, only: [:show, :update]
+  before_action :set_employee, only: [:show, :update, :destroy]
 
   rescue_from Exception, with: :render_status_500
 
