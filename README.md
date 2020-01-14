@@ -560,3 +560,65 @@ const router = new VueRouter({
 ```
 http://localhost:3000/#/employees/new
 ```
+
+### ルーティングにcreateアクションを追加
+
+```
+# config/routes.rb
+:<snip>
+namespace :api, { format: 'json' } do
+  namespace :v1 do
+    resources :employees, only: [:index, :show, :create]
+  end
+end
+:<snip>
+```
+
+### コントローラにcreateアクションを追加
+
+```
+# app/controllers/api/v1/employees_controller.rb
+class Api::V1::EmployeesController < ApiController
+  before_action :set_employee, only: [:show]
+
+  rescue_from Exception, with: :render_status_500
+
+  rescue_from ActiveRecord::RecordNotFound, with: :render_status_404
+
+  def index
+    employees = Employee.select(:id, :name, :department, :gender)
+    render json: employees
+  end
+
+  def show
+    render json: @employee
+  end
+
+  def create
+    employee = Employee.new(employee_params)
+    if employee.save
+      render json: employee, status: :created
+    else
+      render json: { errors: employee.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
+  private
+
+  def set_employee
+    @employee = Employee.find(params[:id])
+  end
+
+  def employee_params
+    params.fetch(:employee, {}).permit(:name, :department, :gender, :birth, :joined_date, :payment, :note)
+  end
+
+  def render_status_404(exception)
+    render json: { errors: [exception] }, status: 404
+  end
+
+  def render_status_500(exception)
+    render json: { errors: [exception] }, status: 500
+  end
+end
+```
