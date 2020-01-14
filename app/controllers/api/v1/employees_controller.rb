@@ -1,5 +1,5 @@
 class Api::V1::EmployeesController < ApiController
-  before_action :set_employee, only: [:show, :update]
+  before_action :set_employee, only: [:show, :update, :destroy]
 
   rescue_from Exception, with: :render_status_500
 
@@ -29,6 +29,12 @@ class Api::V1::EmployeesController < ApiController
     else
       render json: { errors: @employee.errors.full_messages }, status: :unprocessable_entity
     end
+  end
+
+  def destroy
+    @employee.destroy!
+    # 削除に失敗した場合、例外処理を発生させ、rescue_from Exception で拾う。
+    head :no_content
   end
 
   private

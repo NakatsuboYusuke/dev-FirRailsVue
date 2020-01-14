@@ -1,5 +1,5 @@
 # README
-This Repository is for study Vue.js + Ruby on Rails<br>
+This Repository is for First Study Vue.js + Ruby on Rails<br>
 <br>
 Referenced by<br>
 https://bit.ly/2R71Dg4
@@ -868,3 +868,145 @@ class Api::V1::EmployeesController < ApiController
 :<snip>
 end
 ```
+
+## 削除機能を作成
+
+### ルーティングにdestroyアクションを追加
+
+```
+# config/routes.rb
+:<snip>
+namespace :api, { format: 'json' } do
+  namespace :v1 do
+    resources :employees, only: [:index, :show, :create, :update, :destroy]
+  end
+end
+:<snip>
+```
+
+### コントローラにdestroyアクションを追加
+
+```
+# app/controllers/api/v1/employees_controller.rb
+class Api::V1::EmployeesController < ApiController
+  before_action :set_employee, only: [:show, :update, :destroy]
+
+:<snip>
+  def destroy
+    @employee.destroy!
+    head :no_content
+  end
+:<snip>
+end
+```
+
+### モーダル
+スロットとは <modal></modal> に含まれる DOMを Modalコンポーネントの templateで <slot> として参照する機能。<br>
+<div slot="body"></div>と記述すると <slot name="body">と名前付きで呼び出すことができる。
+
+```
+# app/javascript/Modal.vue
+<template>
+  <transition name="modal">
+    <div class="modal-mask">
+      <div class="modal-wrapper">
+        <div class="modal-container">
+
+          <div class="modal-header">
+            <slot name="header">
+            </slot>
+          </div>
+
+          <div class="modal-body">
+            <slot name="body">
+            </slot>
+          </div>
+
+          <div class="modal-footer">
+            <slot name="footer">
+              <button class="modal-default-button" v-on:click="$emit('ok')">
+                OK
+              </button>
+              <button class="modal-default-button" v-on:click="$emit('cancel')">
+                Cancel
+              </button>
+            </slot>
+          </div>
+        </div>
+      </div>
+    </div>
+  </transition>
+</template>
+
+<script>
+export default {
+}
+</script>
+
+<style scoped>
+.modal-mask {
+  position: fixed;
+  z-index: 9998;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, .5);
+  display: table;
+  transition: opacity .3s ease;
+}
+
+.modal-wrapper {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.modal-container {
+  width: 300px;
+  margin: 0px auto;
+  padding: 20px 30px;
+  background-color: #fff;
+  border-radius: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .33);
+  transition: all .3s ease;
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+.modal-header h3 {
+  margin-top: 0;
+  color: #42b983;
+}
+
+.modal-body {
+  margin: 20px 0;
+}
+
+.modal-default-button {
+  float: right;
+}
+
+/*
+ * The following styles are auto-applied to elements with
+ * transition="modal" when their visibility is toggled
+ * by Vue.js.
+ *
+ * You can easily play with the modal transition by editing
+ * these styles.
+ */
+
+.modal-enter {
+  opacity: 0;
+}
+
+.modal-leave-active {
+  opacity: 0;
+}
+
+.modal-enter .modal-container,
+.modal-leave-active .modal-container {
+  -webkit-transform: scale(1.1);
+  transform: scale(1.1);
+}
+</style>
+```
+
