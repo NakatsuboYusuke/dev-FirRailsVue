@@ -10,6 +10,7 @@ https://bit.ly/2R71Dg4
 ## 環境
 - Ruby 2.6.5
 - Ruby on Rails 5.2.3
+- Vue.js 2.6.11
 
 ## Rails と Vue.js をインストール
 
@@ -94,7 +95,7 @@ end
 # config/routes.rb
 Rails.application.routes.draw do
   ActiveAdmin.routes(self)
-  # namespece で指定のパスを設定
+  # namespece でパスを指定
   namespace :api, { format: 'json' } do
     namespace :v1 do
       resources :employees, only: [:index, :show]
@@ -428,4 +429,134 @@ http://localhost:3000/#/employees/1
   </div>
 </template>
 :<snip>
+```
+
+## 新規作成ページを作成
+
+```
+# app/javascript/EmployeeNewPage.vue
+// .prevent 修飾子で、通常の submitで処理されるページ遷移をキャンセルする。
+<template>
+  <form v-on:submit.prevent="createEmployee">
+    <div v-if="errors.length != 0">
+      <ul v-for="item in errors" :key="item">
+        <li><font color="red">{{ item }}</font></li>
+      </ul>
+    </div>
+    <div>
+      <label>Name</label>
+      <input v-model="employee.name" type="text">
+    </div>
+    <div>
+      <label>Department</label>
+      <input v-model="employee.department" type="text">
+    </div>
+    <div>
+      <label>Gender</label>
+      <select v-model="employee.gender">
+        <option>other</option>
+        <option>male</option>
+        <option>female</option>
+      </select>
+    </div>
+    <div>
+      <label>Birth</label>
+      <input v-model="employee.birth" type="date">
+    </div>
+    <div>
+      <label>Joined Date</label>
+      <input v-model="employee.joined_date" type="date">
+    </div>
+    <div>
+      <label>Payment</label>
+      <input v-model="employee.payment" type="number" min="0">
+    </div>
+    <div>
+      <label>Note</label>
+      <input v-model="employee.note" type="text">
+    </div>
+    <button type="submit">Commit</button>
+  </form>
+</template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  data: function () {
+    return {
+      employee: {
+        name: '',
+        department: '',
+        gender: '',
+        birth: '',
+        joined_date: '',
+        payment: '',
+        note: ''
+      },
+      errors: ''
+    }
+  },
+  methods: {
+    createEmployee: function() {
+      axios
+        .post('/api/v1/employees', this.employee)
+        .then(response => {
+          let event = response.data;
+          this.$router.push({ name: 'EmployeeDetailPage', params: { id: event.id } });
+        })
+        .catch(error => {
+          console.error(error);
+          if (error.response.data && error.response.data.errors) {
+            this.errors = error.response.data.errors;
+          }
+        });
+    }
+  }
+}
+</script>
+
+<style scoped>
+</style>
+
+```
+
+### ルーティングを追加
+
+```
+# app/javascript/app.vue
+:<snip>
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+
+import EmployeeIndexPage from 'EmployeeIndexPage.vue'
+import EmployeeDetailPage from 'EmployeeDetailPage.vue'
+import EmployeeNewPage from 'EmployeeNewPage.vue'
+
+const router = new VueRouter({
+  routes: [
+    {
+      path: '/',
+      component: EmployeeIndexPage
+    },
+    {
+      path: '/employees/:id(\\d+)',
+      name: 'EmployeeDetailPage',
+      component: EmployeeDetailPage
+    },
+    {
+      path: '/employees/new',
+      name: 'EmployeeNewPage',
+      component: EmployeeNewPage
+    }
+  ]
+})
+:<snip>
+```
+
+### ルーティングの確認
+以下のアドレスで、レスポンスが返ってきているか確認する
+
+```
+http://localhost:3000/#/employees/new
 ```
